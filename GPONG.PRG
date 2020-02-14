@@ -46,8 +46,22 @@ begin
     config_game();
     // main_menu();
 
+    quick_test();
+
     debug;
     exit("Fin", 0);
+end
+
+function quick_test()
+begin
+    player(0, 32, 180, 0, 90);
+    keyb_input(0, _q, _a, _x);
+
+    player(1, 640-32, 180, 0, 270);
+    keyb_input(0, _p, _l, _m);
+
+    loop frame; end
+
 end
 
 /////////////////
