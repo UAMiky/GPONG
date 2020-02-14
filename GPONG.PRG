@@ -88,39 +88,39 @@ begin
     player_t[n].last_shoot_time = 0;
 
     loop
-        
+
         // TODO: check collisions and handle life
         frame;
     end
 end
 
-function try_to_shoot(id_player)
+function try_to_shoot(n)
 begin
-    if (timer[0] >= (player_t[id_player].last_shoot_time + SHOOT_CADENCE))
-        player_t[id_player].last_shoot_time = timer[0];
+    if (timer[0] >= (player_t[n].last_shoot_time + SHOOT_CADENCE))
+        player_t[n].last_shoot_time = timer[0];
 
         // TODO: shoot
     end
 end
 
-function throttle_update(id_player, throttle)
+function throttle_update(n, throttle)
 private int tmp_vel;
 begin
-    tmp_vel = lerp(player_t[id_player].vel, 0, 100 / MAX_VELOCITY);
+    tmp_vel = lerp(player_t[n].vel, 0, 100 / MAX_VELOCITY);
     tmp_vel = clamp(tmp_vel + throttle, -MAX_VELOCITY, MAX_VELOCITY);
-    player_t[id_player].vel = tmp_vel;
+    player_t[n].vel = tmp_vel;
 end
 
-process keyb_input(id_player, up_key, down_key, shoot_key)
+process keyb_input(n, up_key, down_key, shoot_key)
 private
     throttle = 0;
 begin
-    priority = id_player.priority + 1;
+    priority = player_t[n].pid.priority + 1;
 
     repeat
-        if (player_t[id_player].state == PLAYER_STATE_MOVING)
+        if (player_t[n].state == PLAYER_STATE_MOVING)
             if (key(shoot_key))
-                try_to_shoot(id_player);
+                try_to_shoot(n);
             end
 
             throttle = 0;
@@ -131,10 +131,10 @@ begin
             else if (key(down_key))
                 throttle = -1;
             end end
-            throttle_update(id_player, throttle);
+            throttle_update(n, throttle);
         end
         frame;
-    until (player_t[id_player].state == PLAYER_STATE_DEAD);
+    until (player_t[n].state == PLAYER_STATE_DEAD);
 end
 
 /////////////////
