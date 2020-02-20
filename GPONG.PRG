@@ -62,10 +62,10 @@ end
 
 function quick_test()
 begin
-    player(0, 32, 180, 0, 90);
+    player(0, 32, 180, 0, -90000);
     keyb_input(0, _q, _a, _x);
 
-    player(1, 640-32, 180, 0, 270);
+    player(1, 640-32, 180, 0, 90000);
     keyb_input(0, _p, _l, _m);
 
     loop frame; end
