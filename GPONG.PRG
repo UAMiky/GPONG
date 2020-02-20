@@ -30,6 +30,12 @@ const
     MAX_VELOCITY = 10;
     SHOOT_CADENCE = 100;
 
+    PLAYER_GRAPH = 13;
+
+    ANIM_DIE_FIRST = 19;
+    ANIM_DIE_LAST  = 19;
+    ANIM_DIE_SPEED = 500;
+
 global
     struct player_t[1]
         int pid;
@@ -40,6 +46,8 @@ global
     end =
     0, PLAYER_STATE_DEAD, 3, 0, 0,
     0, PLAYER_STATE_DEAD, 3, 0, 0;
+
+    int g_file;
 
 begin
     load_resources();
@@ -69,6 +77,7 @@ end
 /////////////////
 function load_resources()
 begin
+    g_file = load_fpg(path_resolve("GALAX.FPG"));
 end
 
 function config_game()
@@ -87,7 +96,21 @@ begin
     player_t[n].vel = 0;
     player_t[n].last_shoot_time = 0;
 
-    loop
+    file = g_file;
+
+    while (player_t[n].state != PLAYER_STATE_DEAD)
+        switch (player_t[n].state)
+            case PLAYER_STATE_MOVING:
+                y += player_t[n].vel;
+                graph = PLAYER_GRAPH;
+            end
+
+            case PLAYER_STATE_DYING:
+                for (graph = ANIM_DIE_FIRST; graph <= ANIM_DIE_LAST; ++graph)
+                    frame(ANIM_DIE_SPEED);
+                end
+            end
+        end
 
         // TODO: check collisions and handle life
         frame;
