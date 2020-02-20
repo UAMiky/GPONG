@@ -27,7 +27,7 @@ const
     PLAYER_STATE_MOVING = 1;
     PLAYER_STATE_DYING = 2;
 
-    MAX_VELOCITY = 4;
+    MAX_VELOCITY = 6;
     SHOOT_CADENCE = 100;
 
     PLAYER_GRAPH = 13;
@@ -37,7 +37,7 @@ const
     ANIM_DIE_SPEED = 500;
 
     MIN_Y = 16;
-    MAX_Y = 180 - 16;
+    MAX_Y = 360 - 16;
 
 global
     struct player_t[1]
@@ -65,10 +65,10 @@ end
 
 function quick_test()
 begin
-    player(0, 16, 90, 0, -90000);
+    player(0, 16, 180, 0, -90000);
     keyb_input(0, _q, _a, _x);
 
-    player(1, 320-16, 90, 1, -90000);
+    player(1, 640-16, 180, 1, -90000);
     keyb_input(1, _p, _l, _m);
 
     loop frame; end
@@ -85,7 +85,7 @@ end
 
 function config_game()
 begin
-    set_mode(m320x200);
+    set_mode(m640x400);
     set_fps(24, 0);
 end
 
