@@ -27,7 +27,7 @@ const
     PLAYER_STATE_MOVING = 1;
     PLAYER_STATE_DYING = 2;
 
-    MAX_VELOCITY = 10;
+    MAX_VELOCITY = 4;
     SHOOT_CADENCE = 100;
 
     PLAYER_GRAPH = 13;
@@ -35,6 +35,9 @@ const
     ANIM_DIE_FIRST = 19;
     ANIM_DIE_LAST  = 19;
     ANIM_DIE_SPEED = 500;
+
+    MIN_Y = 16;
+    MAX_Y = 180 - 16;
 
 global
     struct player_t[1]
@@ -62,11 +65,11 @@ end
 
 function quick_test()
 begin
-    player(0, 32, 180, 0, -90000);
+    player(0, 16, 90, 0, -90000);
     keyb_input(0, _q, _a, _x);
 
-    player(1, 640-32, 180, 0, 90000);
-    keyb_input(0, _p, _l, _m);
+    player(1, 320-16, 90, 1, -90000);
+    keyb_input(1, _p, _l, _m);
 
     loop frame; end
 
@@ -82,7 +85,8 @@ end
 
 function config_game()
 begin
-    set_mode(m640x400);
+    set_mode(m320x200);
+    set_fps(24, 0);
 end
 
 /////////////////
@@ -102,6 +106,7 @@ begin
         switch (player_t[n].state)
             case PLAYER_STATE_MOVING:
                 y += player_t[n].vel;
+                y = clamp (y, MIN_Y, MAX_Y);
                 graph = PLAYER_GRAPH;
             end
 
@@ -127,11 +132,12 @@ begin
 end
 
 function throttle_update(n, throttle)
-private int tmp_vel;
 begin
-    tmp_vel = lerp(player_t[n].vel, 0, 100 / MAX_VELOCITY);
-    tmp_vel = clamp(tmp_vel + throttle, -MAX_VELOCITY, MAX_VELOCITY);
-    player_t[n].vel = tmp_vel;
+    if (throttle == 0)
+        player_t[n].vel = lerp(player_t[n].vel, 0, 100 / MAX_VELOCITY);
+    else
+        player_t[n].vel = clamp(player_t[n].vel + throttle, -MAX_VELOCITY, MAX_VELOCITY);
+    end
 end
 
 process keyb_input(n, up_key, down_key, shoot_key)
@@ -149,10 +155,10 @@ begin
             throttle = 0;
             if (key(up_key))
                 if (!key(down_key))
-                    throttle = 1;
+                    throttle = -1;
                 end
             else if (key(down_key))
-                throttle = -1;
+                throttle = 1;
             end end
             throttle_update(n, throttle);
         end
