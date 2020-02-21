@@ -85,7 +85,7 @@ end
 /////////////////
 function load_resources()
 begin
-    g_file = load_fpg(path_resolve("GALAX.FPG"));
+    g_file = load_fpg(path_resolve("GPONG.FPG"));
 end
 
 function config_game()
