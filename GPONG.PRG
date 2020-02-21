@@ -236,7 +236,8 @@ begin
             if (graph == 14) graph = 15; else graph = 14; end
         end
         x += dir;
-    until (out_region(id, 0));
+    // until (out_region(id, 0));
+    until (x>260 and x<380);
 end
 
 /////////////////
