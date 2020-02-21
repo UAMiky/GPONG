@@ -52,6 +52,9 @@ global
 
     int g_file;
 
+local
+    int n;
+
 begin
     load_resources();
     config_game();
@@ -73,7 +76,12 @@ begin
     keyb_input(1, _p, _l, _m);
     simple_sprite(365, 175, min_int+1, g_file, 30);
 
-    simple_sprite(16, 100, -1, g_file, 5);
+    // simple_sprite(16, 100, -1, g_file, 5);
+    // simple_sprite(160, 260, -1, g_file, 5);
+
+    enemy_fire(0, 220, 180, -1, 16, 17);
+    frame(fps * 100);
+    enemy_fire(0, 220, 180, -1, 16, 17);
 
     loop frame; end
 
@@ -104,6 +112,8 @@ end
 //// PLAYER AND CONTROL
 /////////////////
 process player(n, x, y, flags, angle)
+private
+    id_collision;
 begin
     player_t[n].pid = id;
     player_t[n].state = PLAYER_STATE_MOVING;
@@ -125,7 +135,12 @@ begin
 
                 // Check collisions and handle life
                 if (flags < 4)
-                    if (collision (TYPE simple_sprite) )
+                    id_collision = collision (TYPE enemy);
+                    if (id_collision == 0)
+                        id_collision = collision (TYPE enemy_fire);
+                    end
+
+                    if(id_collision)
                         player_starts_dying(n);
                     end
                 end
@@ -217,7 +232,7 @@ end
 
 process missile(n)
 private
-    dir;
+    dir, id_collision;
 begin
     x = player_t[n].pid.x;
     y = player_t[n].pid.y;
@@ -262,6 +277,50 @@ begin
         frame;
     until (size<25)
 end
+
+/////////////////
+//// ENEMIES
+/////////////////
+process enemy(n, x, y, z, kind)
+begin
+end
+
+process enemy_fire(n, x, y, z, graph1, graph2)
+private
+   vel_x = 300, vel_y;
+begin
+    graph=graph1;
+    angle=player_t[n].pid.angle;
+    flags=player_t[n].pid.flags & 3;
+    resolution=100;
+
+    if (n == 0) vel_x *= -1; end
+    vel_y = player_t[n].pid.y - y;
+    if (vel_y != 0)
+        vel_y = (vel_y * vel_x) / (player_t[n].pid.x - x);
+        vel_y = clamp(vel_y, -100, 100);
+    end
+
+    y *= resolution;
+    x *= resolution;
+
+    repeat
+        if (graph == graph1)
+            graph = graph2;
+        else
+            graph = graph1;
+        end
+
+        x += vel_x;
+        y += vel_y;
+
+        if (collision (TYPE explosion)) break; end
+
+        frame;
+    until (out_region(id,0))
+
+end
+
 
 /////////////////
 //// HELPER TOOLS
