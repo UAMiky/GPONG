@@ -167,7 +167,7 @@ end
 function throttle_update(n, throttle)
 begin
     if (throttle == 0)
-        player_t[n].vel = lerp(player_t[n].vel, 0, 100 / MAX_VELOCITY);
+        player_t[n].vel = lerp(player_t[n].vel, 0, 100 - (100 / MAX_VELOCITY));
     else
         player_t[n].vel = clamp(player_t[n].vel + throttle, -MAX_VELOCITY, MAX_VELOCITY);
     end
