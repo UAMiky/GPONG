@@ -38,8 +38,8 @@ const
 
     MIN_Y = 16;
     MAX_Y = 360 - 16;
-    
-    PLAYER_INVULNERABLE_TIME = 100;
+
+    PLAYER_INVULNERABLE_TIME = 150;
 
 global
     struct player_t[1]
@@ -48,7 +48,6 @@ global
         int lifes;
         int vel;
         int last_shoot_time;
-        int invulnerable_time;
     end =
     0, PLAYER_STATE_DEAD, 3, 0, 0,
     0, PLAYER_STATE_DEAD, 3, 0, 0;
@@ -73,7 +72,7 @@ begin
 
     player(1, 640-16, 180, 1, -90000);
     keyb_input(1, _p, _l, _m);
-    
+
     simple_sprite(16, 100, 1, g_file, 5);
 
     loop frame; end
@@ -104,7 +103,7 @@ begin
     player_t[n].lifes = 0;    // TODO: initialize to MAX_LIFES in single player mode
     player_t[n].vel = 0;
     player_t[n].last_shoot_time = 0;
-    player_t[n].invulnerable_time = timer[0] + PLAYER_INVULNERABLE_TIME;
+    player_invulnerable(id);
 
     file = g_file;
 
@@ -117,7 +116,7 @@ begin
                 frame;
 
                 // Check collisions and handle life
-                if (timer[0] >= player_t[n].invulnerable_time)
+                if (flags < 4)
                     if (collision (TYPE simple_sprite) )
                         player_starts_dying(n);
                     end
@@ -128,15 +127,26 @@ begin
                 for (graph = ANIM_DIE_FIRST; graph <= ANIM_DIE_LAST; ++graph)
                     frame(ANIM_DIE_SPEED);
                 end
-                
+
                 player_finished_dying(n);
             end
-            
+
             default:
                 frame;
             end
         end
     end
+end
+
+process player_invulnerable(player_id)
+private end_time;
+begin
+    player_id.flags += 4;
+    end_time = timer[0] + PLAYER_INVULNERABLE_TIME;
+    while(timer[0] < end_time)
+        frame;
+    end
+    player_id.flags -= 4;
 end
 
 function player_starts_dying(n)
@@ -150,7 +160,7 @@ end
 function player_finished_dying(n)
 begin
     player_t[n].state = PLAYER_STATE_MOVING;
-    player_t[n].invulnerable_time = timer[0] + PLAYER_INVULNERABLE_TIME;
+    player_invulnerable(player_t[n].pid);
     
     // TODO: Player may go to PLAYER_STATE_DEAD in single player mode
 end
