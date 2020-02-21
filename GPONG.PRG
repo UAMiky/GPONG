@@ -30,6 +30,7 @@ const
     MAX_VELOCITY = 6;
     SHOOT_CADENCE = 100;
 
+    GRAPH_BACKGROUND = 1;
     PLAYER_GRAPH = 13;
 
     ANIM_DIE_FIRST = 19;
@@ -91,6 +92,7 @@ function config_game()
 begin
     set_mode(m640x400);
     set_fps(24, 0);
+    put_screen(g_file, GRAPH_BACKGROUND);
 end
 
 /////////////////
