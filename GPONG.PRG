@@ -164,8 +164,7 @@ function try_to_shoot(n)
 begin
     if (timer[0] >= (player_t[n].last_shoot_time + SHOOT_CADENCE))
         player_t[n].last_shoot_time = timer[0];
-
-        // TODO: shoot
+        missile(n);
     end
 end
 
@@ -202,6 +201,36 @@ begin
         end
         frame;
     until (player_t[n].state == PLAYER_STATE_DEAD);
+end
+
+
+process missile(n)
+private
+    dir;
+begin
+    x = player_t[n].pid.x;
+    y = player_t[n].pid.y;
+    flags = player_t[n].pid.flags & 3;
+    angle = player_t[n].pid.angle;
+    graph = 14;
+
+    if (n == 0)
+        dir = 8;
+        x += 10;
+    else
+        dir = -8;
+        x -= 10;
+    end
+
+    repeat
+        frame;
+        n++;
+        if (n == 2)
+            n = 0;
+            if (graph == 14) graph = 15; else graph = 14; end
+        end
+        x += dir;
+    until (out_region(id, 0));
 end
 
 /////////////////
