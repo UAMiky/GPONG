@@ -88,7 +88,13 @@ function config_game()
 begin
     set_mode(m640x400);
     set_fps(24, 0);
-    put_screen(g_file, GRAPH_BACKGROUND);
+    background(g_file, GRAPH_BACKGROUND);
+end
+
+process background(file, graph)
+begin
+    x = 320; y = 200; z = min_int + 1;
+    loop frame; end
 end
 
 /////////////////
