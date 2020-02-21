@@ -35,7 +35,7 @@ const
 
     ANIM_DIE_FIRST = 19;
     ANIM_DIE_LAST  = 19;
-    ANIM_DIE_SPEED = 500;
+    ANIM_DIE_SPEED = 24 * 300;
 
     MIN_Y = 16;
     MAX_Y = 360 - 16;
