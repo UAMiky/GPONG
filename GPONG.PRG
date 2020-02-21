@@ -67,9 +67,11 @@ function quick_test()
 begin
     player(0, 16, 180, 0, -90000);
     keyb_input(0, _q, _a, _x);
+    simple_sprite(275, 175, min_int+1, g_file, 30);
 
     player(1, 640-16, 180, 1, -90000);
     keyb_input(1, _p, _l, _m);
+    simple_sprite(365, 175, min_int+1, g_file, 30);
 
     simple_sprite(16, 100, -1, g_file, 5);
 
