@@ -33,10 +33,6 @@ const
     GRAPH_BACKGROUND = 1;
     PLAYER_GRAPH = 13;
 
-    ANIM_DIE_FIRST = 19;
-    ANIM_DIE_LAST  = 19;
-    ANIM_DIE_SPEED = 24 * 300;
-
     MIN_Y = 16;
     MAX_Y = 360 - 16;
 
@@ -74,7 +70,7 @@ begin
     player(1, 640-16, 180, 1, -90000);
     keyb_input(1, _p, _l, _m);
 
-    simple_sprite(16, 100, 1, g_file, 5);
+    simple_sprite(16, 100, -1, g_file, 5);
 
     loop frame; end
 
@@ -126,10 +122,7 @@ begin
             end
 
             case PLAYER_STATE_DYING:
-                for (graph = ANIM_DIE_FIRST; graph <= ANIM_DIE_LAST; ++graph)
-                    frame(ANIM_DIE_SPEED);
-                end
-
+                explosion(x, y, 100);
                 player_finished_dying(n);
             end
 
@@ -155,7 +148,7 @@ function player_starts_dying(n)
 begin
     player_t[n].vel = 0;
     player_t[n].state = PLAYER_STATE_DYING;
-    
+
     // TODO: Decrement lifes in single player mode
 end
 
@@ -163,7 +156,7 @@ function player_finished_dying(n)
 begin
     player_t[n].state = PLAYER_STATE_MOVING;
     player_invulnerable(player_t[n].pid);
-    
+
     // TODO: Player may go to PLAYER_STATE_DEAD in single player mode
 end
 
@@ -209,6 +202,24 @@ begin
         end
         frame;
     until (player_t[n].state == PLAYER_STATE_DEAD);
+end
+
+/////////////////
+//// EXPLOSION
+/////////////////
+function explosion(x,y,size);
+begin
+    graph=19;
+    repeat
+        if (size > 50 and rand(0,100)<size/10)
+            clone
+                x+=rand(-8,8);
+                y+=rand(-8,8);
+            end
+        end
+        size-=2;
+        frame;
+    until (size<25)
 end
 
 /////////////////
