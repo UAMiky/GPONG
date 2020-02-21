@@ -44,7 +44,7 @@ global
         int state;
         int lifes;
         int vel;
-        int last_shoot_time;
+        int next_shoot_time;
         int missile_id;
     end =
     0, PLAYER_STATE_DEAD, 3, 0, 0, 0,
@@ -109,7 +109,7 @@ begin
     player_t[n].state = PLAYER_STATE_MOVING;
     player_t[n].lifes = 0;    // TODO: initialize to MAX_LIFES in single player mode
     player_t[n].vel = 0;
-    player_t[n].last_shoot_time = 0;
+    player_t[n].next_shoot_time = 0;
     player_t[n].missile_id = 0;
     player_invulnerable(id);
 
@@ -172,9 +172,9 @@ end
 
 function try_to_shoot(n)
 begin
-    if ( (timer[0] >= (player_t[n].last_shoot_time + SHOOT_CADENCE)) or
-         (player_t[n].missile_id = 0) )
-        player_t[n].last_shoot_time = timer[0];
+    if ( (timer[0] >= player_t[n].next_shoot_time) or
+         (player_t[n].missile_id == 0) )
+        player_t[n].next_shoot_time = timer[0] + SHOOT_CADENCE;
         player_t[n].missile_id = missile(n);
     end
 end
