@@ -116,12 +116,29 @@ begin
     end
 end
 
+function show_help()
+begin
+    write(0, 20, 30, 0, "Q - MOVE UP");
+    write(0, 20, 40, 0, " A - MOVE DOWN");
+    write(0, 20, 50, 0, "   X - SHOOT");
+    write(0, 20, 70, 0, "PRESS SPACE TO START");
+
+    write(0, 620, 30, 2, "MOVE UP - P");
+    write(0, 620, 40, 2, "MOVE DOWN - L ");
+    write(0, 620, 50, 2, "SHOOT - M   ");
+    write(0, 620, 70, 2, "PRESS SPACE TO START");
+
+    repeat frame; until(key(_space));
+
+    delete_text(all_text);
+end
+
 process game_two_players()
 begin
     score(0, 275, 175, min_int+1, g_file);
     score(1, 365, 175, min_int+1, g_file);
 
-    repeat frame; until(key(_space));
+    show_help();
 
     loop
         player_t[0].score = 0;
@@ -139,7 +156,7 @@ begin
         fade_on();
         frame(fps * 400);
 
-        repeat frame; until(key(_space));
+        show_help();
     end
 end
 
@@ -226,8 +243,10 @@ begin
                 if (flags < 4)
                     id_collision = collision (TYPE missile);
                     if (id_collision)
-                        kill_missile(id_collision);
-                        player_starts_dying(n);
+                        if (id_collision.n != n)
+                            kill_missile(id_collision);
+                            player_starts_dying(n);
+                        end
                     end
                 end
                 frame;
