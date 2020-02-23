@@ -81,7 +81,6 @@ function quick_test()
 begin
     game_two_players();
     loop frame; end
-
 end
 
 /////////////////
@@ -119,19 +118,29 @@ end
 
 process game_two_players()
 begin
-    player_t[0].score = 0;
-    player_t[1].score = 0;
-
     score(0, 275, 175, min_int+1, g_file);
     score(1, 365, 175, min_int+1, g_file);
 
-    fade_off();
+    repeat frame; until(key(_space));
 
-    n = 0;
-    repeat
-        n++;
-        level_two_players(n);
-    until (player_t[0].score == 9 or player_t[1].score == 9);
+    loop
+        player_t[0].score = 0;
+        player_t[1].score = 0;
+
+
+        fade_off();
+
+        n = 0;
+        repeat
+            n++;
+            level_two_players(n);
+        until (player_t[0].score == 9 or player_t[1].score == 9);
+
+        fade_on();
+        frame(fps * 400);
+
+        repeat frame; until(key(_space));
+    end
 end
 
 function level_two_players(level)
@@ -213,6 +222,14 @@ begin
                 y += player_t[n].vel;
                 y = clamp (y, MIN_Y, MAX_Y);
                 graph = PLAYER_GRAPH;
+
+                if (flags < 4)
+                    id_collision = collision (TYPE missile);
+                    if (id_collision)
+                        kill_missile(id_collision);
+                        player_starts_dying(n);
+                    end
+                end
                 frame;
             end
 
@@ -299,7 +316,6 @@ begin
     until (player_t[n].state == PLAYER_STATE_DEAD);
 end
 
-
 process missile(n)
 private
     dir, id_collision;
@@ -328,6 +344,14 @@ begin
     if (player_t[n].missile_id == id)
         player_t[n].missile_id = 0;
     end
+end
+
+function kill_missile(id_missile)
+begin
+    if (player_t[id_missile.n].missile_id == id_missile)
+        player_t[id_missile.n].missile_id = 0;
+    end
+    signal(id_missile, s_kill);
 end
 
 /////////////////
@@ -471,10 +495,7 @@ BEGIN
         ELSE
             id_proceso = collision(TYPE missile);
             IF (id_proceso)
-                signal(id_proceso, s_kill);
-                if (player_t[n].missile_id == id_proceso)
-                    player_t[n].missile_id = 0;
-                end
+                kill_missile(id_proceso);
                 player_t[n].enemies--;
                 graph = 0;
                 explosion(x, y, 100);
