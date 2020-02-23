@@ -36,6 +36,12 @@ const
     MIN_Y = 16;
     MAX_Y = 360 - 16;
 
+    SQUAD_INITIAL_X = 20;
+    SQUAD_INITIAL_Y = 60;
+    ENEMY_WIDTH = 20;
+    ENEMY_HEIGHT = 20;
+    SQUAD_MOVEMENT = 1;
+
     PLAYER_INVULNERABLE_TIME = 150;
 
 global
@@ -46,11 +52,16 @@ global
         int vel;
         int next_shoot_time;
         int missile_id;
+        int enemies;
+        int score;
     end =
-    0, PLAYER_STATE_DEAD, 3, 0, 0, 0,
-    0, PLAYER_STATE_DEAD, 3, 0, 0, 0;
+    0, PLAYER_STATE_DEAD, 3, 0, 0, 0, 0, 0,
+    0, PLAYER_STATE_DEAD, 3, 0, 0, 0, 0, 0;
 
     int g_file;
+    int squad_dir = 0;
+    int change_dir = 0;
+    int squad_y;
 
 local
     int n;
@@ -68,21 +79,7 @@ end
 
 function quick_test()
 begin
-    player(0, 16, 180, 0, -90000);
-    keyb_input(0, _q, _a, _x);
-    simple_sprite(275, 175, min_int+1, g_file, 30);
-
-    player(1, 640-16, 180, 1, -90000);
-    keyb_input(1, _p, _l, _m);
-    simple_sprite(365, 175, min_int+1, g_file, 30);
-
-    // simple_sprite(16, 100, -1, g_file, 5);
-    // simple_sprite(160, 260, -1, g_file, 5);
-
-    enemy_fire(0, 220, 180, -1, 16, 17);
-    frame(fps * 100);
-    enemy_fire(0, 220, 180, -1, 16, 17);
-
+    game_two_players();
     loop frame; end
 
 end
@@ -109,6 +106,91 @@ begin
 end
 
 /////////////////
+//// LEVEL CONTROLLERS
+/////////////////
+
+process score(n, x, y, z, file)
+begin
+    loop
+        graph = 30 + player_t[n].score;
+        frame;
+    end
+end
+
+process game_two_players()
+begin
+    player_t[0].score = 0;
+    player_t[1].score = 0;
+
+    score(0, 275, 175, min_int+1, g_file);
+    score(1, 365, 175, min_int+1, g_file);
+
+    fade_off();
+
+    n = 0;
+    repeat
+        n++;
+        level_two_players(n);
+    until (player_t[0].score == 9 or player_t[1].score == 9);
+end
+
+function level_two_players(level)
+begin
+
+    player(0, 16, 180, 0, -90000);
+    keyb_input(0, _q, _a, _x);
+
+    player(1, 640-16, 180, 1, -90000);
+    keyb_input(1, _p, _l, _m);
+
+    squad_y = SQUAD_INITIAL_Y;
+    squad_dir = 1;
+    change_dir = 0;
+
+    player_t[0].enemies = player_t[1].enemies = 12 * 3;
+    for(x = 0; x < 12; x++)
+        enemy(0, 0, x, 3, level);
+        enemy(1, 0, x, 3, level);
+    end
+    for(x = 0; x < 12; x++)
+        enemy(0, 1, x, 2, level);
+        enemy(1, 1, x, 2, level);
+    end
+    for(x = 0; x < 12; x++)
+        enemy(0, 2, x, 1, level);
+        enemy(1, 2, x, 1, level);
+    end
+
+    fade_on();
+
+    repeat
+        frame;
+        if (squad_dir == 0)
+            squad_y -= SQUAD_MOVEMENT;
+            // if (squad_y < 0) change_dir = 1; end
+        else
+            squad_y += SQUAD_MOVEMENT;
+            // if (squad_y > 360) change_dir = 1; end
+        end
+
+        if (change_dir == 1)
+            squad_dir = squad_dir xor 1;
+            change_dir = 0;
+        end
+    until (player_t[0].enemies == 0 or player_t[1].enemies == 0);
+
+    if (player_t[0].enemies == 0)
+        player_t[0].score++;
+    else
+        player_t[1].score++;
+    end
+
+    signal(id, s_freeze_tree);
+    fade_off();
+    signal(id, s_kill_tree);
+end
+
+/////////////////
 //// PLAYER AND CONTROL
 /////////////////
 process player(n, x, y, flags, angle)
@@ -132,18 +214,6 @@ begin
                 y = clamp (y, MIN_Y, MAX_Y);
                 graph = PLAYER_GRAPH;
                 frame;
-
-                // Check collisions and handle life
-                if (flags < 4)
-                    id_collision = collision (TYPE enemy);
-                    if (id_collision == 0)
-                        id_collision = collision (TYPE enemy_fire);
-                    end
-
-                    if(id_collision)
-                        player_starts_dying(n);
-                    end
-                end
             end
 
             case PLAYER_STATE_DYING:
@@ -252,8 +322,8 @@ begin
         frame;
         if (graph == 14) graph = 15; else graph = 14; end
         x += dir;
-    // until (out_region(id, 0));
-    until (x>260 and x<380);
+    until (out_region(id, 0));
+    // until (x>260 and x<380);
 
     if (player_t[n].missile_id == id)
         player_t[n].missile_id = 0;
@@ -281,9 +351,140 @@ end
 /////////////////
 //// ENEMIES
 /////////////////
-process enemy(n, x, y, z, kind)
-begin
-end
+//------------------------------------------------------------------------------
+// Proceso enemigo
+// Proceso para las naves enemigas
+// 1-crea el enemigo y lo pone en la posici¢n dentro del escuadr¢n.
+// 2-controla la acci¢n del enemigo cuando la variable indique que baje.
+// Empieza con abajo=0 (Quedarse en la posici¢n de escuadr¢n).
+//------------------------------------------------------------------------------
+
+PROCESS enemy(n, row, col, kind, level)
+
+PRIVATE
+    num_aleatorio;      // Para n£meros aleatorios
+    id_proceso;         // Identificador de uso general.
+    ahora=0;            // Numero de animaci¢n
+    animacion[]=        // Configuraci¢n de la animaci¢n
+        8,9,10,11,10,9;
+    abajo=0;            // 0=Posicion de escuadr¢n, 1=ataque,
+                        // 3=retorna a la posici¢n de escuadr¢n
+    velocidad;          // Velocidad horizontal cuando atacan
+    idnave;
+    aux_x;
+
+BEGIN
+    idnave = player_t[n].pid;
+    angle = idnave.angle;
+    flags = idnave.flags & 3;
+    y = col * ENEMY_WIDTH + squad_y;   // Selecciona posici¢n inicial
+    aux_x = row * ENEMY_HEIGHT + SQUAD_INITIAL_X;
+
+    SWITCH (kind)           // Selecciona el gr fico del enemigo
+        case 1: graph = 2; END
+        case 2: graph = animacion[0]; END
+        case 3: graph = 12; END
+    END
+
+    LOOP
+        IF (kind == 1)        // Animaci¢n de enemigos tipo 1
+            graph++;
+            IF (graph == 7) graph = 2; END
+        END
+
+        IF (kind == 2)        // Animaci¢n de enemigos tipo 2
+            ahora++;
+            IF (ahora > 5) ahora = 0; END
+            graph = animacion[ahora];
+        END
+
+        IF (aux_x < 130)                  // Puede disparar si vuela bajo
+            num_aleatorio = rand(0,1500);     // Porcentaje de disparo
+            IF (kind == 3 AND num_aleatorio <= level * 2)
+                enemy_fire(n, x, y, -1, 18, 18);
+            END
+            IF (kind == 2 AND num_aleatorio <= level)
+                enemy_fire(n, x, y, -1, 16, 17);
+            END
+        END
+
+        IF (abajo == 1)           // Ataca la nave
+            aux_x += 2;
+            // Comprueba si ha salido de pantalla
+            IF (out_region(id,0))
+                // Cambia las coordenadas a arriba
+                aux_x = 0;
+                y = col * ENEMY_WIDTH + squad_y;
+                abajo = 3;
+            END
+            IF (y > idnave.y)     // Va hacia la nave del jugador
+                IF (velocidad > -kind-2) velocidad--; END
+            ELSE
+                IF (velocidad < kind + 2) velocidad++; END
+            END
+            y += velocidad;
+        END
+
+        IF (abajo == 3)           // Retorna a la posici¢n de escuadr¢n
+            aux_x++;
+            IF (aux_x == row * ENEMY_HEIGHT + SQUAD_INITIAL_X) abajo = 0; END
+            // Si hay menos enemigos que el level por 3 vuelve a bajar
+            IF (player_t[n].enemies < level * 3) abajo = 1; END
+        END
+
+        IF ((abajo == 0) OR (abajo == 3)) // Mueve al escuadr¢n
+            num_aleatorio = rand(1,4000);
+            // Aleatoriamente y seg£n el level hace que el proceso baje
+            IF (num_aleatorio < level * 2)
+                abajo = 1;
+                IF (kind == 3)
+                    // SOUND(ataque3,200,300);
+                END
+                IF (kind == 1)
+                    // SOUND(ataque1,200,300);
+                END
+            END
+
+            IF (squad_dir == 0)         // Si la direcci¢n es hacia la izquierda
+                y -= SQUAD_MOVEMENT;
+
+                // Cuando no se pueda mover a la izquierda cambia de direcci¢n
+                IF (y < 20) change_dir = 1; END
+
+            ELSE                // Si la direcci¢n es a la derecha
+                y += SQUAD_MOVEMENT;
+                IF (y > 340) change_dir = 1; END // Cambia la direcci¢n
+            END
+        END
+
+        if (n == 0)
+            x = 240 - aux_x;
+        else
+            x = 400 + aux_x;
+        end
+
+        // Mata la nave del jugador cuando colisione con ella
+        IF (idnave.flags < 4 and collision(TYPE player))
+            player_starts_dying(n);
+            player_t[n].enemies--;
+            break;
+        ELSE
+            id_proceso = collision(TYPE missile);
+            IF (id_proceso)
+                signal(id_proceso, s_kill);
+                if (player_t[n].missile_id == id_proceso)
+                    player_t[n].missile_id = 0;
+                end
+                player_t[n].enemies--;
+                graph = 0;
+                explosion(x, y, 100);
+                break;
+            END
+        END
+
+        FRAME;
+    END
+END
 
 process enemy_fire(n, x, y, z, graph1, graph2)
 private
@@ -314,7 +515,10 @@ begin
         x += vel_x;
         y += vel_y;
 
-        if (collision (TYPE explosion)) break; end
+        if (player_t[n].pid.flags < 4 and collision (TYPE player))
+            player_starts_dying(n);
+            break;
+        end
 
         frame;
     until (out_region(id,0))
