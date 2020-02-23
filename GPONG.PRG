@@ -59,6 +59,12 @@ global
     0, PLAYER_STATE_DEAD, 3, 0, 0, 0, 0, 0;
 
     int g_file;
+    int snd_laser;
+    int snd_laser2;
+    int snd_explosion;
+    int snd_atack1;
+    int snd_atack3;
+
     int squad_dir = 0;
     int change_dir = 0;
     int squad_y;
@@ -89,6 +95,13 @@ end
 function load_resources()
 begin
     g_file = load_fpg(path_resolve("GPONG.FPG"));
+
+    snd_laser = load_pcm(path_resolve("laser.pcm"),0);
+    snd_laser2 = load_pcm(path_resolve("laser2.pcm"),0);
+    snd_explosion = load_pcm(path_resolve("laser3.pcm"),0);
+    snd_atack1 = load_pcm(path_resolve("buiu.pcm"),0);
+    snd_atack1 = load_pcm(path_resolve("fx1.pcm"),0);
+
 end
 
 function config_game()
@@ -297,6 +310,7 @@ begin
          (player_t[n].missile_id == 0) )
         player_t[n].next_shoot_time = timer[0] + SHOOT_CADENCE;
         player_t[n].missile_id = missile(n);
+        sound(snd_laser, 40, 50);
     end
 end
 
@@ -378,6 +392,7 @@ end
 /////////////////
 function explosion(x,y,size);
 begin
+    sound(snd_explosion, 80, 100);
     graph=19;
     repeat
         if (size > 50 and rand(0,100)<size/10)
@@ -481,10 +496,10 @@ BEGIN
             IF (num_aleatorio < level * 2)
                 abajo = 1;
                 IF (kind == 3)
-                    // SOUND(ataque3,200,300);
+                    sound(snd_atack3, 200, 300);
                 END
                 IF (kind == 1)
-                    // SOUND(ataque1,200,300);
+                    sound(snd_atack1, 200, 300);
                 END
             END
 
@@ -530,6 +545,7 @@ process enemy_fire(n, x, y, z, graph1, graph2)
 private
    vel_x = 300, vel_y;
 begin
+    sound(snd_laser2, 256, 300);
     graph=graph1;
     angle=player_t[n].pid.angle;
     flags=player_t[n].pid.flags & 3;
