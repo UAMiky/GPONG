@@ -55,8 +55,7 @@ global
         int enemies;
         int score;
     end =
-    0, PLAYER_STATE_DEAD, 3, 0, 0, 0, 0, 0,
-    0, PLAYER_STATE_DEAD, 3, 0, 0, 0, 0, 0;
+    2 DUP (0, PLAYER_STATE_DEAD, 3, 0, 0, 0, 0, 0);
 
     int g_file;
     int snd_laser;
