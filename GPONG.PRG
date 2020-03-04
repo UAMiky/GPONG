@@ -88,8 +88,16 @@ end
 
 function quick_test()
 begin
-    game_two_players();
-    loop frame; end
+    // game_two_players();
+    // loop frame; end
+
+    n = 0;
+    loop
+        if (n == 0)
+            n = game_one_player(false);
+        end
+        frame;
+    end
 end
 
 /////////////////
@@ -116,13 +124,89 @@ end
 
 process background(file, graph)
 begin
-    x = 320; y = 200; z = min_int + 1;
+    x = 320; y = 200; z = min_int + 2;
     loop frame; end
 end
 
 /////////////////
 //// LEVEL CONTROLLERS
 /////////////////
+
+process game_one_player(brain_fucking)
+begin
+    player_t[0].lifes = MAX_LIFES;
+    player_t[1].lifes = MAX_LIFES;
+
+    single_player_mode = true;
+    single_player_score = 0;
+
+    n = 0;
+    repeat
+        n++;
+        level_one_player(brain_fucking, n);
+    until (player_t[0].state == PLAYER_STATE_DEAD or
+           player_t[1].state == PLAYER_STATE_DEAD);
+
+    // TODO: Show highscore
+
+    // Inform father that we are dead
+    father.n = 0;
+end
+
+function level_one_player(brain_fucking, level)
+begin
+    player(0, 16, 180, 0, -90000);
+    player(1, 640-16, 180, 1, -90000);
+    
+    // Invert controls on brain fucking mode
+    if (brain_fucking)
+        keyb_input(1, _q, _a, _x);
+        keyb_input(0, _p, _l, _m);
+    else
+        keyb_input(0, _q, _a, _x);
+        keyb_input(1, _p, _l, _m);
+    end
+
+    squad_y = SQUAD_INITIAL_Y;
+    squad_dir = 1;
+    change_dir = 0;
+
+    player_t[0].enemies = player_t[1].enemies = 12 * 3;
+    for(x = 0; x < 12; x++)
+        enemy(0, 0, x, 3, level);
+        enemy(1, 0, x, 3, level);
+    end
+    for(x = 0; x < 12; x++)
+        enemy(0, 1, x, 2, level);
+        enemy(1, 1, x, 2, level);
+    end
+    for(x = 0; x < 12; x++)
+        enemy(0, 2, x, 1, level);
+        enemy(1, 2, x, 1, level);
+    end
+
+    fade_on();
+
+    repeat
+        frame;
+        if (squad_dir == 0)
+            squad_y -= SQUAD_MOVEMENT;
+        else
+            squad_y += SQUAD_MOVEMENT;
+        end
+
+        if (change_dir == 1)
+            squad_dir = squad_dir xor 1;
+            change_dir = 0;
+        end
+    until ( (player_t[0].enemies == 0 and player_t[1].enemies == 0) or    // All enemies killed or
+            (player_t[0].state == PLAYER_STATE_DEAD) or                   // left player is dead or
+            (player_t[1].state == PLAYER_STATE_DEAD) );                   // right player is dead
+
+    signal(id, s_freeze_tree);
+    fade_off();
+    signal(id, s_kill_tree);
+end
 
 process score(n, x, y, z, file)
 begin
@@ -241,7 +325,6 @@ private
 begin
     player_t[n].pid = id;
     player_t[n].state = PLAYER_STATE_MOVING;
-    player_t[n].lifes = MAX_LIFES;
     player_t[n].vel = 0;
     player_t[n].next_shoot_time = 0;
     player_t[n].missile_id = 0;
