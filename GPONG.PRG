@@ -29,6 +29,7 @@ const
 
     MAX_VELOCITY = 6;
     SHOOT_CADENCE = 100;
+    MAX_LIFES = 3;
 
     GRAPH_BACKGROUND = 1;
     PLAYER_GRAPH = 13;
@@ -56,6 +57,9 @@ global
         int score;
     end =
     2 DUP (0, PLAYER_STATE_DEAD, 3, 0, 0, 0, 0, 0);
+    
+    int single_player_mode = false;
+    int single_player_score = 0;
 
     int g_file;
     int snd_laser;
@@ -237,7 +241,7 @@ private
 begin
     player_t[n].pid = id;
     player_t[n].state = PLAYER_STATE_MOVING;
-    player_t[n].lifes = 0;    // TODO: initialize to MAX_LIFES in single player mode
+    player_t[n].lifes = MAX_LIFES;
     player_t[n].vel = 0;
     player_t[n].next_shoot_time = 0;
     player_t[n].missile_id = 0;
@@ -291,16 +295,21 @@ function player_starts_dying(n)
 begin
     player_t[n].vel = 0;
     player_t[n].state = PLAYER_STATE_DYING;
-
-    // TODO: Decrement lifes in single player mode
+    
+    // Decrement lifes in single player mode
+    if (single_player_mode)
+        player_t[n].lifes -= 1;
+    end
 end
 
 function player_finished_dying(n)
 begin
-    player_t[n].state = PLAYER_STATE_MOVING;
-    player_invulnerable(player_t[n].pid);
-
-    // TODO: Player may go to PLAYER_STATE_DEAD in single player mode
+    if (player_t[n].lifes == 0)
+        player_t[n].state = PLAYER_STATE_DEAD;
+    else
+        player_t[n].state = PLAYER_STATE_MOVING;
+        player_invulnerable(player_t[n].pid);
+    end
 end
 
 function try_to_shoot(n)
@@ -529,6 +538,7 @@ BEGIN
             id_proceso = collision(TYPE missile);
             IF (id_proceso)
                 kill_missile(id_proceso);
+                single_player_score += kind;
                 player_t[n].enemies--;
                 graph = 0;
                 explosion(x, y, 100);
