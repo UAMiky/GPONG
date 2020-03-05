@@ -32,6 +32,7 @@ const
     MAX_LIFES = 3;
 
     GRAPH_BACKGROUND = 1;
+    GRAPH_SCORE_HIPHEN = 40;
     PLAYER_GRAPH = 13;
 
     MIN_Y = 16;
@@ -237,6 +238,7 @@ process game_two_players()
 begin
     score(0, 275, 175, min_int+1, g_file);
     score(1, 365, 175, min_int+1, g_file);
+    simple_sprite(320, 175, min_int+1, g_file, GRAPH_SCORE_HIPHEN);
 
     show_help();
 
