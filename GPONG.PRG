@@ -137,7 +137,7 @@ end
 
 process game_one_player(brain_fucking)
 private
-    int id_score, id_score_val;
+    int id_lifes;
 begin
     player_t[0].lifes = 0;
     player_t[1].lifes = 0;
@@ -151,8 +151,12 @@ begin
     next_life_score = SCORE_FOR_NEW_LIFE;
 
     text_z = min_int + 1;
-    id_score = write(0, 320, 10, 4, "SCORE");
-    id_score_val = write_int(0, 320, 20, 4, &single_player_score);
+    write(0, 242, 10, 3, "LIFES");
+    write(0, 320, 10, 4, "SCORE");
+    write_int(0, 320, 20, 4, &single_player_score);
+    write(0, 398, 10, 5, "LIFES");
+
+    id_lifes = life_marker();
 
     n = 0;
     repeat
@@ -163,8 +167,8 @@ begin
 
     // TODO: Show highscore
 
-    delete_text(id_score_val);
-    delete_text(id_score);
+    delete_text(all_text);
+    signal(id_lifes, s_kill_tree);
 
     // Inform father that we are dead
     father.n = 0;
@@ -233,6 +237,28 @@ begin
 
     if (player_t[1].lifes < MAX_LIFES)
         player_t[1].lifes++;
+    end
+end
+
+process life_marker()
+begin
+    priority = min_int + 1;
+    define_region (1, 240, 10, 80, 30);
+    define_region (2, 320, 10, 80, 30);
+
+    for (x = 0; x < MAX_LIFES; x++)
+        n = simple_sprite(250 + x * 20, 20, min_int + 1, g_file, PLAYER_GRAPH);
+        n.region = 1;
+        n = simple_sprite(390 - x * 20, 20, min_int + 1, g_file, PLAYER_GRAPH);
+        n.region = 2;
+    end
+
+    loop
+        define_region (1, 240, 10,
+                       20 * player_t[0].lifes, 30);
+        define_region (2, 400 - 20 * player_t[1].lifes, 10,
+                       20 * player_t[1].lifes, 30);
+        frame;
     end
 end
 
