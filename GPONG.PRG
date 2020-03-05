@@ -58,7 +58,7 @@ global
         int score;
     end =
     2 DUP (0, PLAYER_STATE_DEAD, 3, 0, 0, 0, 0, 0);
-    
+
     int single_player_mode = false;
     int single_player_score = 0;
 
@@ -134,12 +134,18 @@ end
 /////////////////
 
 process game_one_player(brain_fucking)
+private
+    int id_score, id_score_val;
 begin
     player_t[0].lifes = MAX_LIFES;
     player_t[1].lifes = MAX_LIFES;
 
     single_player_mode = true;
     single_player_score = 0;
+
+    text_z = min_int + 1;
+    id_score = write(0, 320, 10, 4, "SCORE");
+    id_score_val = write_int(0, 320, 20, 4, &single_player_score);
 
     n = 0;
     repeat
@@ -150,6 +156,9 @@ begin
 
     // TODO: Show highscore
 
+    delete_text(id_score_val);
+    delete_text(id_score);
+
     // Inform father that we are dead
     father.n = 0;
 end
@@ -158,7 +167,7 @@ function level_one_player(brain_fucking, level)
 begin
     player(0, 16, 180, 0, -90000);
     player(1, 640-16, 180, 1, -90000);
-    
+
     // Invert controls on brain fucking mode
     if (brain_fucking)
         keyb_input(1, _q, _a, _x);
@@ -380,7 +389,7 @@ function player_starts_dying(n)
 begin
     player_t[n].vel = 0;
     player_t[n].state = PLAYER_STATE_DYING;
-    
+
     // Decrement lifes in single player mode
     if (single_player_mode)
         player_t[n].lifes -= 1;
@@ -623,7 +632,7 @@ BEGIN
             id_proceso = collision(TYPE missile);
             IF (id_proceso)
                 kill_missile(id_proceso);
-                single_player_score += kind;
+                single_player_score += kind * 10;
                 player_t[n].enemies--;
                 graph = 0;
                 explosion(x, y, 100);
