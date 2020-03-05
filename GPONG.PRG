@@ -30,6 +30,7 @@ const
     MAX_VELOCITY = 6;
     SHOOT_CADENCE = 100;
     MAX_LIFES = 3;
+    SCORE_FOR_NEW_LIFE = 1000;
 
     GRAPH_BACKGROUND = 1;
     GRAPH_SCORE_HIPHEN = 40;
@@ -61,6 +62,7 @@ global
 
     int single_player_mode = false;
     int single_player_score = 0;
+    int next_life_score = 0;
 
     int g_file;
     int snd_laser;
@@ -137,11 +139,16 @@ process game_one_player(brain_fucking)
 private
     int id_score, id_score_val;
 begin
-    player_t[0].lifes = MAX_LIFES;
-    player_t[1].lifes = MAX_LIFES;
+    player_t[0].lifes = 0;
+    player_t[1].lifes = 0;
+
+    for (x = 0; x < MAX_LIFES; x++)
+        add_life();
+    end
 
     single_player_mode = true;
     single_player_score = 0;
+    next_life_score = SCORE_FOR_NEW_LIFE;
 
     text_z = min_int + 1;
     id_score = write(0, 320, 10, 4, "SCORE");
@@ -216,6 +223,17 @@ begin
     signal(id, s_freeze_tree);
     fade_off();
     signal(id, s_kill_tree);
+end
+
+function add_life()
+begin
+    if (player_t[0].lifes < MAX_LIFES)
+        player_t[0].lifes++;
+    end
+
+    if (player_t[1].lifes < MAX_LIFES)
+        player_t[1].lifes++;
+    end
 end
 
 process score(n, x, y, z, file)
@@ -633,6 +651,10 @@ BEGIN
             IF (id_proceso)
                 kill_missile(id_proceso);
                 single_player_score += kind * 10;
+                if (single_player_score >= next_life_score)
+                    next_life_score += SCORE_FOR_NEW_LIFE;
+                    add_life();
+                end
                 player_t[n].enemies--;
                 graph = 0;
                 explosion(x, y, 100);
