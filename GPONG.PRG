@@ -81,25 +81,19 @@ local
 begin
     load_resources();
     config_game();
-    main_menu();
 
-    quick_test();
-
-    debug;
-    exit("Fin", 0);
-end
-
-function quick_test()
-begin
-    // game_two_players();
-    // loop frame; end
-
-    n = 0;
     loop
-        if (n == 0)
-            n = game_one_player(false);
+        fade_on();
+        n = main_menu();
+        fade_off();
+
+        switch (n)
+            case 0: n = game_two_players(); end
+            case 1: n = game_one_player(false); end
+            case 2: n = game_one_player(true); end
         end
-        frame;
+
+        repeat frame; until (n == 0);
     end
 end
 
@@ -139,9 +133,12 @@ end
 function main_menu()
 private
     cmd;
+    id_selector;
 begin
+    id_selector = simple_sprite(320, 34, min_int + 1, g_file, 21);
     n = 0;
     repeat
+        id_selector.y = 34 + 10 * n;
         print_menu(n);
         sleep(20);
         cmd = wait_for_menu_key();
@@ -150,8 +147,8 @@ begin
             case _up:   n = (n + 2) % 3; end
             case _down: n = (n + 1) % 3; end
         end
-    until (cmd == _space);
-
+    until (cmd == _enter);
+    signal(id_selector, s_kill);
     return (n);
 end
 
@@ -181,7 +178,7 @@ begin
     write (0, 320, 40, 1, "ONE PLAYER");
     write (0, 320, 50, 1, "ONE PLAYER - BFG");
     write (0, 320, 70, 1, "SELECT WITH UP/DOWN");
-    write (0, 320, 80, 1, "PRESS SPACE TO START");
+    write (0, 320, 80, 1, "PRESS ENTER TO START");
 end
 
 function wait_for_menu_key()
@@ -190,7 +187,7 @@ begin
     repeat
         if (key (_up))    n = _up; end
         if (key (_down))  n = _down; end
-        if (key (_space)) n = _space; end
+        if (key (_enter)) n = _enter; end
         frame;
     until (n != 0);
     return (n);
@@ -340,49 +337,27 @@ begin
     end
 end
 
-function show_help()
-begin
-    write(0, 20, 30, 0, "Q - MOVE UP");
-    write(0, 20, 40, 0, " A - MOVE DOWN");
-    write(0, 20, 50, 0, "   X - SHOOT");
-    write(0, 20, 70, 0, "PRESS SPACE TO START");
-
-    write(0, 620, 30, 2, "MOVE UP - P");
-    write(0, 620, 40, 2, "MOVE DOWN - L ");
-    write(0, 620, 50, 2, "SHOOT - M   ");
-    write(0, 620, 70, 2, "PRESS SPACE TO START");
-
-    repeat frame; until(key(_space));
-
-    delete_text(all_text);
-end
-
 process game_two_players()
 begin
     score(0, 275, 175, min_int+1, g_file);
     score(1, 365, 175, min_int+1, g_file);
     simple_sprite(320, 175, min_int+1, g_file, GRAPH_SCORE_HIPHEN);
 
-    show_help();
+    player_t[0].score = 0;
+    player_t[1].score = 0;
 
-    loop
-        player_t[0].score = 0;
-        player_t[1].score = 0;
+    fade_off();
 
+    n = 0;
+    repeat
+        n++;
+        level_two_players(n);
+    until (player_t[0].score == 9 or player_t[1].score == 9);
 
-        fade_off();
+    fade_on();
+    frame(fps * 400);
 
-        n = 0;
-        repeat
-            n++;
-            level_two_players(n);
-        until (player_t[0].score == 9 or player_t[1].score == 9);
-
-        fade_on();
-        frame(fps * 400);
-
-        show_help();
-    end
+    father.n = 0;
 end
 
 function level_two_players(level)
