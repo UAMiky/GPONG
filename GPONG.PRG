@@ -291,8 +291,10 @@ begin
             (player_t[0].state == PLAYER_STATE_DEAD) or                   // left player is dead or
             (player_t[1].state == PLAYER_STATE_DEAD) );                   // right player is dead
 
+    signal(type missile, s_freeze);
     signal(id, s_freeze_tree);
     fade_off();
+    signal(type missile, s_kill);
     signal(id, s_kill_tree);
 end
 
@@ -411,8 +413,10 @@ begin
         player_t[1].score++;
     end
 
+    signal(type missile, s_freeze);
     signal(id, s_freeze_tree);
     fade_off();
+    signal(type missile, s_kill);
     signal(id, s_kill_tree);
 end
 
