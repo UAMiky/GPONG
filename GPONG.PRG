@@ -81,7 +81,7 @@ local
 begin
     load_resources();
     config_game();
-    // main_menu();
+    main_menu();
 
     quick_test();
 
@@ -123,12 +123,83 @@ begin
     set_mode(m640x400);
     set_fps(24, 0);
     background(g_file, GRAPH_BACKGROUND);
+    text_z = min_int + 1;
 end
 
 process background(file, graph)
 begin
     x = 320; y = 200; z = min_int + 2;
     loop frame; end
+end
+
+/////////////////
+//// MAIN MENU
+/////////////////
+
+function main_menu()
+private
+    cmd;
+begin
+    n = 0;
+    repeat
+        print_menu(n);
+        sleep(20);
+        cmd = wait_for_menu_key();
+        delete_text (all_text);
+        switch (cmd)
+            case _up:   n = (n + 2) % 3; end
+            case _down: n = (n + 1) % 3; end
+        end
+    until (cmd == _space);
+
+    return (n);
+end
+
+function print_menu(n)
+begin
+
+    if (n == 2)
+        write(0, 105, 30, 2, "MOVE UP - P");
+        write(0, 105, 40, 2, "MOVE DOWN - L ");
+        write(0, 105, 50, 2, "SHOOT - M   ");
+
+        write(0, 535, 30, 0, "Q - MOVE UP");
+        write(0, 535, 40, 0, " A - MOVE DOWN");
+        write(0, 535, 50, 0, "   X - SHOOT");
+    else
+        write(0, 20, 30, 0, "Q - MOVE UP");
+        write(0, 20, 40, 0, " A - MOVE DOWN");
+        write(0, 20, 50, 0, "   X - SHOOT");
+
+        write(0, 620, 30, 2, "MOVE UP - P");
+        write(0, 620, 40, 2, "MOVE DOWN - L ");
+        write(0, 620, 50, 2, "SHOOT - M   ");
+    end
+
+    write (0, 320, 10, 1, "MAIN MENU");
+    write (0, 320, 30, 1, "TWO PLAYERS");
+    write (0, 320, 40, 1, "ONE PLAYER");
+    write (0, 320, 50, 1, "ONE PLAYER - BFG");
+    write (0, 320, 70, 1, "SELECT WITH UP/DOWN");
+    write (0, 320, 80, 1, "PRESS SPACE TO START");
+end
+
+function wait_for_menu_key()
+begin
+    n = 0;
+    repeat
+        if (key (_up))    n = _up; end
+        if (key (_down))  n = _down; end
+        if (key (_space)) n = _space; end
+        frame;
+    until (n != 0);
+    return (n);
+end
+
+function sleep(n)
+begin
+    n += timer[0];
+    while(timer[0] < n) frame; end;
 end
 
 /////////////////
@@ -150,7 +221,6 @@ begin
     single_player_score = 0;
     next_life_score = SCORE_FOR_NEW_LIFE;
 
-    text_z = min_int + 1;
     write(0, 242, 10, 3, "LIFES");
     write(0, 320, 10, 4, "SCORE");
     write_int(0, 320, 20, 4, &single_player_score);
