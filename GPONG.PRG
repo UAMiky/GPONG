@@ -60,6 +60,31 @@ global
     end =
     2 DUP (0, PLAYER_STATE_DEAD, 3, 0, 0, 0, 0, 0);
 
+    struct records_data[19]
+        string name[2];
+        int score;
+    end =
+    ".1.", 1000,
+    ".2.", 900,
+    ".3.", 800,
+    ".4.", 700,
+    ".5.", 600,
+    ".6.", 500,
+    ".7.", 400,
+    ".8.", 300,
+    ".9.", 200,
+    ".0.", 100,
+    ".1.", 1000,
+    ".2.", 900,
+    ".3.", 800,
+    ".4.", 700,
+    ".5.", 600,
+    ".6.", 500,
+    ".7.", 400,
+    ".8.", 300,
+    ".9.", 200,
+    ".0.", 100;
+
     int single_player_mode = false;
     int single_player_score = 0;
     int next_life_score = 0;
@@ -110,6 +135,15 @@ begin
     snd_atack1 = load_pcm(path_resolve("buiu.pcm"),0);
     snd_atack1 = load_pcm(path_resolve("fx1.pcm"),0);
 
+    if (get_fileinfo("GPONG_RCD") == 0)
+        save("GPONG.RCD", offset records_data, sizeof(records_data) );
+    else
+        if (fileinfo.size == sizeof(records_data) )
+            load("GPONG.RCD", offset records_data);
+        else
+            save("GPONG.RCD", offset records_data, sizeof(records_data) );
+        end
+    end
 end
 
 function config_game()
