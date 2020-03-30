@@ -282,9 +282,9 @@ begin
 
     // Show highscore
     if (brain_fucking)
-        highscore(10, 19);
+        highscore(10, 19, "HIGHSCORES (BFG)");
     else
-        highscore(0, 9);
+        highscore(0, 9, "HIGHSCORES");
     end
 
     delete_text(all_text);
@@ -294,20 +294,22 @@ begin
     father.n = 0;
 end
 
-function highscore (first, last)
+function highscore (first, last, title)
 private i, j;
 begin
     n = 0;
     j = 10;
+
+    write(0, 320, 40, 4, title);
 
     for (i = first; i <= last; n++, i++)
         if (records_data[i].score < single_player_score)
             j = n;
             break;
         else
-            write(    0, 300, 50 + 10 * n, 5, rec_titles[n].t);
-            write(    0, 306, 50 + 10 * n, 3, records_data[i].name);
-            write_int(0, 334, 50 + 10 * n, 3, &records_data[i].score);
+            write(    0, 300, 60 + 10 * n, 5, rec_titles[n].t);
+            write(    0, 306, 60 + 10 * n, 3, records_data[i].name);
+            write_int(0, 334, 60 + 10 * n, 3, &records_data[i].score);
         end
     end
 
@@ -315,19 +317,25 @@ begin
         records_data[i].score = records_data[i - 1].score;
         strcpy(records_data[i].name, records_data[i - 1].name);
 
-        write(    0, 300, 50 + 10 * n, 5, rec_titles[n].t);
-        write(    0, 306, 50 + 10 * n, 3, records_data[i].name);
-        write_int(0, 334, 50 + 10 * n, 3, &records_data[i].score);
+        write(    0, 300, 60 + 10 * n, 5, rec_titles[n].t);
+        write(    0, 306, 60 + 10 * n, 3, records_data[i].name);
+        write_int(0, 334, 60 + 10 * n, 3, &records_data[i].score);
     end
 
     if (j < 10)
         records_data[i].score = single_player_score;
 
-        write(    0, 300, 50 + 10 * n, 5, rec_titles[n].t);
-        write_int(0, 334, 50 + 10 * n, 3, &records_data[i].score);
+        write(    0, 300, 60 + 10 * n, 5, rec_titles[n].t);
+        write_int(0, 334, 60 + 10 * n, 3, &records_data[i].score);
     end
 
     fade_on();
+
+    if (j < 10)
+        // input_name(i);
+        // save("GPONG.RCD", offset records_data, sizeof(records_data) );
+    end
+
     repeat frame; until (key(_enter) );
     fade_off();
 
