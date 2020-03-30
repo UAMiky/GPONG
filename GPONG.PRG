@@ -331,6 +331,8 @@ begin
     end
 end
 
+////////////////////////////////////////////////////////////////
+
 process score(n, x, y, z, file)
 begin
     loop
@@ -345,6 +347,7 @@ begin
     score(1, 365, 175, min_int+1, g_file);
     simple_sprite(320, 175, min_int+1, g_file, GRAPH_SCORE_HIPHEN);
 
+    single_player_mode = false;
     player_t[0].score = 0;
     player_t[1].score = 0;
 
