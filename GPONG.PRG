@@ -48,6 +48,20 @@ const
     PLAYER_INVULNERABLE_TIME = 150;
 
 global
+    struct rec_titles[9]
+        string t[3];
+    end =
+    " 1 -",
+    " 2 -",
+    " 3 -",
+    " 4 -",
+    " 5 -",
+    " 6 -",
+    " 7 -",
+    " 8 -",
+    " 9 -",
+    "10 -";
+
     struct player_t[1]
         int pid;
         int state;
@@ -266,13 +280,57 @@ begin
     until (player_t[0].state == PLAYER_STATE_DEAD or
            player_t[1].state == PLAYER_STATE_DEAD);
 
-    // TODO: Show highscore
+    // Show highscore
+    if (brain_fucking)
+        highscore(10, 19);
+    else
+        highscore(0, 9);
+    end
 
     delete_text(all_text);
     signal(id_lifes, s_kill_tree);
 
     // Inform father that we are dead
     father.n = 0;
+end
+
+function highscore (first, last)
+private i, j;
+begin
+    n = 0;
+    j = 10;
+
+    for (i = first; i <= last; n++, i++)
+        if (records_data[i].score < single_player_score)
+            j = n;
+            break;
+        else
+            write(    0, 300, 50 + 10 * n, 5, rec_titles[n].t);
+            write(    0, 306, 50 + 10 * n, 3, records_data[i].name);
+            write_int(0, 334, 50 + 10 * n, 3, &records_data[i].score);
+        end
+    end
+
+    for (n = 9, i = last; n > j; n--, i--)
+        records_data[i].score = records_data[i - 1].score;
+        strcpy(records_data[i].name, records_data[i - 1].name);
+
+        write(    0, 300, 50 + 10 * n, 5, rec_titles[n].t);
+        write(    0, 306, 50 + 10 * n, 3, records_data[i].name);
+        write_int(0, 334, 50 + 10 * n, 3, &records_data[i].score);
+    end
+
+    if (j < 10)
+        records_data[i].score = single_player_score;
+
+        write(    0, 300, 50 + 10 * n, 5, rec_titles[n].t);
+        write_int(0, 334, 50 + 10 * n, 3, &records_data[i].score);
+    end
+
+    fade_on();
+    repeat frame; until (key(_enter) );
+    fade_off();
+
 end
 
 function level_one_player(brain_fucking, level)
