@@ -62,6 +62,41 @@ global
     " 9 -",
     "10 -";
 
+    // Ascii characters
+    ascii_chars[]=
+    "X","X","X","X","X","X","X","X",    // 0-7
+    "X","X","X","X","X","X","X","X",    // 8-15
+    "X","X","X","X","X","X","X","X",    // 16-23
+    "X","X","X","X","X","X","X","X",    // 24-31
+    " ","!","X","#","$","%","&","'",    // 32-39
+    "(",")","*","+",",","-",".","/",    // 40-47
+    "0","1","2","3","4","5","6","7",    // 48-55
+    "8","9",":",";","<","=",">","?",    // 56-63
+    "@","A","B","C","D","E","F","G",    // 64-71
+    "H","I","J","K","L","M","N","O",    // 72-79
+    "P","Q","R","S","T","U","V","W",    // 80-87
+    "X","Y","Z","[","\","]","^","_",    // 88-95
+    "`","a","b","c","d","e","f","g",    // 96-103
+    "h","i","j","k","l","m","n","o",    // 104-111
+    "p","q","r","s","t","u","v","w",    // 112-119
+    "x","y","z","{","|","}","~","X",    // 120-127
+    "c","u","e","a","a","a","a","c",    // 128-135
+    "e","e","e","i","i","i","a","a",    // 136-143
+    "e","X","C","X","o","o","u","u",    // 144-151
+    "y","o","u","c","X","X","X","X",    // 152-159
+    "a","i","o","u","¤","¥","¦","§",    // 160-167
+    "¨","©","ª","«","¬","­","®","¯",    // 168-175
+    "°","±","²","X","X","X","X","X",    // 176-183
+    "X","X","X","X","X","X","X","X",    // 184-191
+    "X","X","X","X","X","X","X","X",    // 192-199
+    "X","X","X","X","X","X","X","X",    // 200-207
+    "X","X","X","X","X","X","X","X",    // 208-215
+    "X","X","X","Û","Ü","Ý","Þ","ß",    // 216-223
+    "X","X","X","X","X","X","X","X",    // 224-231
+    "X","X","X","X","X","X","X","X",    // 232-239
+    "X","X","X","X","X","X","X","X",    // 240-247
+    "X","X","X","X","X","X","X","X";    // 248-255
+
     struct player_t[1]
         int pid;
         int state;
@@ -149,7 +184,7 @@ begin
     snd_atack1 = load_pcm(path_resolve("buiu.pcm"),0);
     snd_atack1 = load_pcm(path_resolve("fx1.pcm"),0);
 
-    if (get_fileinfo("GPONG_RCD") == 0)
+    if (get_fileinfo("GPONG.RCD") == 0)
         save("GPONG.RCD", offset records_data, sizeof(records_data) );
     else
         if (fileinfo.size == sizeof(records_data) )
@@ -165,12 +200,12 @@ begin
     set_mode(m640x400);
     set_fps(24, 0);
     background(g_file, GRAPH_BACKGROUND);
-    text_z = min_int + 1;
+    text_z = min_int + 2;
 end
 
 process background(file, graph)
 begin
-    x = 320; y = 200; z = min_int + 2;
+    x = 320; y = 200; z = min_int + 3;
     loop frame; end
 end
 
@@ -332,13 +367,63 @@ begin
     fade_on();
 
     if (j < 10)
-        // input_name(i);
-        // save("GPONG.RCD", offset records_data, sizeof(records_data) );
+        input_name(i, 60 + 10 * n);
+        save("GPONG.RCD", offset records_data, sizeof(records_data) );
     end
 
+    write(    0, 320, 170, 4, "PRESS ENTER TO CONTINUE");
     repeat frame; until (key(_enter) );
     fade_off();
+end
 
+function input_name(idx, y)
+private
+    i, id_cursor = 0;
+    texts[2];
+begin
+    i = 0;
+    x = 306;
+    sleep(50);
+
+    timer[3] = 0;
+    strcpy(records_data[idx].name, "");
+
+    loop
+        repeat
+            if (timer[3] > 50)
+                timer[3] = 0;
+                if (id_cursor == 0)
+                    id_cursor = write(0, x, y, 3, "_");
+                else
+                    delete_text(id_cursor);
+                    id_cursor = 0;
+                end
+            end
+            frame;
+        until (scan_code != 0);
+
+        timer[3] = 0;
+        if (id_cursor != 0)
+            delete_text (id_cursor);
+            id_cursor = 0;
+        end;
+
+        if ( (i > 0) and (scan_code == _backspace))
+            strdel(records_data[idx].name, 0, 1);
+            x -= 6;
+            i--;
+            delete_text(texts[i]);
+        else if (scan_code == _enter)
+            break;
+        else if ( (i < 3) and (ascii >= 32))
+            strcat(records_data[idx].name, ascii_chars[ascii]);
+            texts[i] = write(0, x, y, 3, ascii_chars[ascii]);
+            i++;
+            x += 6;
+        end end end
+    end
+
+    sleep(50);
 end
 
 function level_one_player(brain_fucking, level)
